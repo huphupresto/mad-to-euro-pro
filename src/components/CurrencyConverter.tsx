@@ -63,7 +63,7 @@ const CurrencyConverter = () => {
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <ArrowRightLeft className="w-5 h-5 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Convertisseur MAD → EUR
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Convertisseur MAD → EUR 
 Sté AGOUIM
           </h1>
         </div>
