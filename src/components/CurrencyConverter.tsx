@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { 
-  ArrowRightLeft, Copy, Check, RotateCcw, Info, Settings, 
-  ChevronDown, Banknote, Euro 
-} from "lucide-react";
+import {
+  ArrowRightLeft, Copy, Check, RotateCcw, Info, Settings,
+  ChevronDown, Banknote, Euro } from
+"lucide-react";
 import { toast } from "sonner";
 
 const CurrencyConverter = () => {
@@ -50,10 +50,10 @@ const CurrencyConverter = () => {
   };
 
   const formatEur = (n: number) =>
-    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
 
   const formatMad = (n: number) =>
-    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "MAD", minimumFractionDigits: 2 }).format(n);
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "MAD", minimumFractionDigits: 2 }).format(n);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-background">
@@ -63,8 +63,8 @@ const CurrencyConverter = () => {
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <ArrowRightLeft className="w-5 h-5 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-            Convertisseur MAD → EUR
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Convertisseur MAD → EUR
+Sté AGOUIM
           </h1>
         </div>
         <p className="text-muted-foreground text-sm">
@@ -95,8 +95,8 @@ const CurrencyConverter = () => {
                 placeholder="Ex : 5 000"
                 value={amount}
                 onChange={(e) => handleAmountChange(e.target.value)}
-                className="pr-16 text-lg h-12"
-              />
+                className="pr-16 text-lg h-12" />
+              
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                 MAD
               </span>
@@ -108,8 +108,8 @@ const CurrencyConverter = () => {
             <Button
               onClick={() => {}}
               className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!madAmount || !rate}
-            >
+              disabled={!madAmount || !rate}>
+              
               <ArrowRightLeft className="w-4 h-4 mr-2" />
               Convertir
             </Button>
@@ -119,8 +119,8 @@ const CurrencyConverter = () => {
           </div>
 
           {/* Results */}
-          {result && (
-            <div className="space-y-4 animate-fade-in">
+          {result &&
+          <div className="space-y-4 animate-fade-in">
               <div className="rounded-xl bg-secondary/50 border border-border p-5 space-y-3">
                 {/* Final amount */}
                 <div className="text-center">
@@ -139,16 +139,16 @@ const CurrencyConverter = () => {
                 {/* Copy button */}
                 <div className="flex justify-center">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCopy}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4 mr-1 text-success" />
-                    ) : (
-                      <Copy className="w-4 h-4 mr-1" />
-                    )}
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="text-muted-foreground hover:text-foreground">
+                  
+                    {copied ?
+                  <Check className="w-4 h-4 mr-1 text-success" /> :
+
+                  <Copy className="w-4 h-4 mr-1" />
+                  }
                     {copied ? "Copié" : "Copier"}
                   </Button>
                 </div>
@@ -188,7 +188,7 @@ const CurrencyConverter = () => {
                 </div>
               </div>
             </div>
-          )}
+          }
 
           {/* Advanced Settings */}
           <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -209,8 +209,8 @@ const CurrencyConverter = () => {
                   type="text"
                   inputMode="decimal"
                   value={exchangeRate}
-                  onChange={(e) => setExchangeRate(e.target.value.replace(/[^0-9.]/g, ""))}
-                />
+                  onChange={(e) => setExchangeRate(e.target.value.replace(/[^0-9.]/g, ""))} />
+                
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commission-rate">Taux de commission (%)</Label>
@@ -219,8 +219,8 @@ const CurrencyConverter = () => {
                   type="text"
                   inputMode="decimal"
                   value={commissionRate}
-                  onChange={(e) => setCommissionRate(e.target.value.replace(/[^0-9.]/g, ""))}
-                />
+                  onChange={(e) => setCommissionRate(e.target.value.replace(/[^0-9.]/g, ""))} />
+                
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -231,8 +231,8 @@ const CurrencyConverter = () => {
       <p className="mt-6 text-xs text-muted-foreground text-center">
         Taux indicatif · Les résultats sont fournis à titre informatif uniquement.
       </p>
-    </div>
-  );
+    </div>);
+
 };
 
 export default CurrencyConverter;
