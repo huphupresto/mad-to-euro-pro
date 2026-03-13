@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 const CurrencyConverter = () => {
   const [amount, setAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("10.85");
-  const [commissionRate, setCommissionRate] = useState("1.5");
+  const [commissionRate, setCommissionRate] = useState("3");
   const [copied, setCopied] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [rateLoading, setRateLoading] = useState(false);
