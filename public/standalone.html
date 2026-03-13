@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convertisseur Facture MAD → EUR</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f9fb;
+      --card: #ffffff;
+      --primary: #1a1a2e;
+      --primary-fg: #ffffff;
+      --foreground: #1a1a2e;
+      --muted: #6b7280;
+      --muted-light: #9ca3af;
+      --border: #e5e7eb;
+      --secondary-bg: #f3f4f6;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --green: #22c55e;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--foreground);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+    }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 2rem; }
+    .header-row { display: inline-flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+    .icon-box {
+      width: 2.75rem; height: 2.75rem; border-radius: var(--radius);
+      background: var(--primary); display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .icon-box svg { width: 20px; height: 20px; color: var(--primary-fg); }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+    .subtitle { color: var(--muted); font-size: .85rem; }
+
+    /* Card */
+    .card {
+      width: 100%; max-width: 28rem; background: var(--card);
+      border: 1px solid var(--border); border-radius: 1rem;
+      box-shadow: var(--shadow); padding: 1.75rem;
+    }
+    .card > * + * { margin-top: 1.25rem; }
+
+    /* Rate badge */
+    .rate-info { text-align: center; }
+    .rate-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .75rem; font-weight: 500; color: var(--muted);
+      background: var(--secondary-bg); padding: .4rem .75rem; border-radius: 999px;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+
+    .rate-meta { display: flex; align-items: center; justify-content: center; gap: .5rem; margin-top: .35rem; }
+    .rate-meta span { font-size: .65rem; color: var(--muted-light); }
+
+    /* Buttons */
+    button {
+      cursor: pointer; border: none; font-family: inherit; font-size: .8rem;
+      display: inline-flex; align-items: center; gap: .35rem; border-radius: var(--radius);
+    }
+    .btn-ghost {
+      background: none; color: var(--muted); padding: .25rem .5rem;
+    }
+    .btn-ghost:hover { color: var(--foreground); }
+    .btn-outline {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--foreground); padding: .6rem 1rem; font-weight: 500;
+    }
+    .btn-outline:hover { background: var(--secondary-bg); }
+    .btn-copy {
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+      padding: .35rem .75rem; font-size: .8rem;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    /* Input group */
+    .input-group label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .4rem; }
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%; height: 3.25rem; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0 3.5rem 0 1rem;
+      font-size: 1.1rem; background: var(--secondary-bg);
+      font-family: inherit; outline: none; transition: background .2s, border-color .2s;
+    }
+    .input-wrap input:focus { background: var(--card); border-color: var(--accent); }
+    .input-wrap .suffix {
+      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      font-size: .85rem; font-weight: 600; color: var(--muted);
+    }
+
+    /* Arrow */
+    .arrow-row { display: flex; justify-content: center; }
+    .arrow-circle {
+      width: 2.25rem; height: 2.25rem; border-radius: 50%;
+      background: var(--accent-light); display: flex; align-items: center; justify-content: center;
+    }
+    .arrow-circle svg { width: 16px; height: 16px; color: var(--accent); }
+
+    /* Result */
+    .result-box {
+      background: var(--primary); border-radius: 1rem; padding: 1.5rem;
+      text-align: center; color: var(--primary-fg);
+    }
+    .result-label {
+      font-size: .65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .12em; opacity: .7;
+    }
+    .result-value { font-size: 2.75rem; font-weight: 800; letter-spacing: -.02em; margin: .25rem 0; }
+    .result-currency { font-size: 1rem; font-weight: 600; opacity: .7; }
+
+    /* Breakdown */
+    .breakdown {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem; font-size: .85rem;
+    }
+    .breakdown > * + * { margin-top: .5rem; }
+    .breakdown .title { font-weight: 600; margin-bottom: .25rem; }
+    .breakdown .row { display: flex; justify-content: space-between; color: var(--muted); }
+    .breakdown .row.accent span:last-child { color: var(--accent); font-weight: 500; }
+    .breakdown .total {
+      display: flex; justify-content: space-between;
+      font-weight: 600; color: var(--foreground);
+      border-top: 1px solid var(--border); padding-top: .6rem; margin-top: .6rem;
+    }
+
+    /* Settings */
+    .settings-toggle {
+      width: 100%; justify-content: space-between; padding: .5rem 0;
+      font-size: .85rem; color: var(--muted); background: none; border: none;
+    }
+    .settings-toggle:hover { color: var(--foreground); }
+    .settings-toggle svg.chevron { transition: transform .2s; }
+    .settings-toggle.open svg.chevron { transform: rotate(180deg); }
+    .settings-panel { display: none; padding-top: .75rem; }
+    .settings-panel.open { display: block; }
+    .settings-panel > * + * { margin-top: .75rem; }
+    .settings-panel label { display: block; font-size: .8rem; font-weight: 500; margin-bottom: .3rem; color: var(--muted); }
+    .settings-panel input {
+      width: 100%; height: 2.5rem; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0 .75rem;
+      font-size: .9rem; font-family: inherit; outline: none;
+    }
+    .settings-panel input:focus { border-color: var(--accent); }
+
+    /* Footer */
+    .footer { margin-top: 1.5rem; font-size: .7rem; color: var(--muted-light); text-align: center; max-width: 28rem; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--foreground); color: var(--primary-fg);
+      padding: .6rem 1.2rem; border-radius: 999px; font-size: .8rem; font-weight: 500;
+      opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 100;
+    }
+    .toast.show { opacity: 1; }
+
+    .hidden { display: none !important; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <div class="icon-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2.5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+      </div>
+      <h1>Convertisseur Facture MAD → EUR</h1>
+    </div>
+    <p class="subtitle">Sté AGOUIM · Calculez le montant exact à réclamer pour recevoir votre facture nette</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+    <!-- Rate info -->
+    <div class="rate-info">
+      <div class="rate-badge">
+        <span class="live-dot hidden" id="liveDot"></span>
+        Taux : 1 EUR = <span id="rateDisplay">--</span> MAD · Commission : <span id="commDisplay">3</span> %
+      </div>
+      <div class="rate-meta">
+        <span id="rateTimestamp"></span>
+        <button class="btn-ghost" id="refreshBtn" onclick="fetchRate()">
+          <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          Actualiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-group">
+      <label for="madAmount">Montant de la Facture (MAD)</label>
+      <div class="input-wrap">
+        <input id="madAmount" type="text" inputmode="decimal" placeholder="Ex : 19 831" oninput="calculate()" />
+        <span class="suffix">MAD</span>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow-row hidden" id="arrowRow">
+      <div class="arrow-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultSection" class="hidden">
+      <div class="result-box">
+        <p class="result-label">Montant à réclamer</p>
+        <div>
+          <span class="result-value" id="resultValue">0.00</span>
+          <span class="result-currency">EUR</span>
+        </div>
+        <button class="btn-copy" onclick="copyResult()" style="margin-top:.5rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          <span id="copyLabel">Copier le montant</span>
+        </button>
+      </div>
+
+      <!-- Breakdown -->
+      <div class="breakdown" style="margin-top:1rem">
+        <p class="title">Décomposition</p>
+        <div class="row"><span>Montant net souhaité</span><span id="brkMad">-</span></div>
+        <div class="row"><span>Équivalent de base</span><span id="brkBase">-</span></div>
+        <div class="row accent"><span>Frais estimés (<span id="brkCommPct">3</span> %)</span><span id="brkFees">-</span></div>
+        <div class="row"><span>Taux appliqué</span><span id="brkRate">-</span></div>
+        <div class="total"><span>Total à réclamer</span><span id="brkTotal">-</span></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div>
+      <button class="btn-outline" onclick="resetAll()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Réinitialiser
+      </button>
+    </div>
+
+    <!-- Settings -->
+    <div>
+      <button class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+        <span style="display:inline-flex;align-items:center;gap:.4rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          Paramètres
+        </span>
+        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="settings-panel" id="settingsPanel">
+        <div>
+          <label for="exchangeRateInput">Taux de change (1 EUR = ? MAD)</label>
+          <input id="exchangeRateInput" type="text" inputmode="decimal" oninput="onRateManualChange()" />
+        </div>
+        <div>
+          <label for="commissionInput">Marge de sécurité (%)</label>
+          <input id="commissionInput" type="text" inputmode="decimal" value="3" oninput="calculate()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">Les résultats sont fournis à titre indicatif. La marge de sécurité compense les écarts de change et frais bancaires.</p>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+<script>
+  let exchangeRate = 0;
+  let isLiveRate = false;
+
+  const $ = id => document.getElementById(id);
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function fmt(n, currency) {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, minimumFractionDigits: 2 }).format(n);
+  }
+
+  async function fetchRate() {
+    const icon = $('refreshIcon');
+    icon.classList.add('spin');
+    $('refreshBtn').disabled = true;
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+      const data = await res.json();
+      if (data.result === 'success' && data.rates?.MAD) {
+        exchangeRate = data.rates.MAD;
+        isLiveRate = true;
+        $('rateDisplay').textContent = exchangeRate.toFixed(4);
+        $('exchangeRateInput').value = exchangeRate.toFixed(4);
+        $('liveDot').classList.remove('hidden');
+        if (data.time_last_update_utc) {
+          const d = new Date(data.time_last_update_utc);
+          $('rateTimestamp').textContent = 'Mis à jour : ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        showToast('✓ Taux de change mis à jour !');
+        calculate();
+      } else {
+        throw new Error('Rate not found');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('✗ Impossible de récupérer le taux');
+      if (!exchangeRate) {
+        exchangeRate = 10.85;
+        $('rateDisplay').textContent = '10.85';
+        $('exchangeRateInput').value = '10.85';
+      }
+    } finally {
+      icon.classList.remove('spin');
+      $('refreshBtn').disabled = false;
+    }
+  }
+
+  function onRateManualChange() {
+    const v = $('exchangeRateInput').value.replace(/[^0-9.]/g, '');
+    $('exchangeRateInput').value = v;
+    exchangeRate = parseFloat(v) || 0;
+    isLiveRate = false;
+    $('liveDot').classList.add('hidden');
+    $('rateDisplay').textContent = v || '--';
+    calculate();
+  }
+
+  function calculate() {
+    const raw = $('madAmount').value.replace(/[^0-9.,]/g, '').replace(',', '.');
+    $('madAmount').value = raw;
+    const madAmount = parseFloat(raw) || 0;
+    const commission = parseFloat($('commissionInput').value) || 0;
+
+    $('commDisplay').textContent = $('commissionInput').value || '0';
+    $('brkCommPct').textContent = $('commissionInput').value || '0';
+
+    if (!madAmount || !exchangeRate) {
+      $('arrowRow').classList.add('hidden');
+      $('resultSection').classList.add('hidden');
+      return;
+    }
+
+    const baseEur = madAmount / exchangeRate;
+    const eurToSend = baseEur / (1 - commission / 100);
+    const fees = eurToSend - baseEur;
+
+    $('arrowRow').classList.remove('hidden');
+    $('resultSection').classList.remove('hidden');
+
+    $('resultValue').textContent = eurToSend.toFixed(2);
+    $('brkMad').textContent = fmt(madAmount, 'MAD');
+    $('brkBase').textContent = fmt(baseEur, 'EUR');
+    $('brkFees').textContent = '+ ' + fmt(fees, 'EUR');
+    $('brkRate').textContent = '1 EUR = ' + (exchangeRate.toFixed ? exchangeRate.toFixed(4) : exchangeRate) + ' MAD';
+    $('brkTotal').textContent = fmt(eurToSend, 'EUR');
+  }
+
+  function copyResult() {
+    const v = $('resultValue').textContent;
+    navigator.clipboard.writeText(v).then(() => {
+      $('copyLabel').textContent = 'Copié !';
+      showToast('✓ Montant copié !');
+      setTimeout(() => $('copyLabel').textContent = 'Copier le montant', 2000);
+    });
+  }
+
+  function resetAll() {
+    $('madAmount').value = '';
+    $('commissionInput').value = '3';
+    $('commDisplay').textContent = '3';
+    $('brkCommPct').textContent = '3';
+    $('arrowRow').classList.add('hidden');
+    $('resultSection').classList.add('hidden');
+    fetchRate();
+  }
+
+  function toggleSettings() {
+    const panel = $('settingsPanel');
+    const btn = $('settingsToggle');
+    panel.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  // Init
+  fetchRate();
+</script>
+</body>
+</html>
