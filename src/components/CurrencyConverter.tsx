@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Wallet, ArrowDown, Copy, Check, RotateCcw, Info, Settings, ChevronDown,
+  Wallet, ArrowDown, Copy, Check, RotateCcw, Info, Settings, ChevronDown, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const CurrencyConverter = () => {
   const [amount, setAmount] = useState("");
@@ -16,6 +17,34 @@ const CurrencyConverter = () => {
   const [commissionRate, setCommissionRate] = useState("1.5");
   const [copied, setCopied] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [rateLoading, setRateLoading] = useState(false);
+  const [rateTimestamp, setRateTimestamp] = useState<string | null>(null);
+  const [isLiveRate, setIsLiveRate] = useState(false);
+
+  const fetchLiveRate = async () => {
+    setRateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-exchange-rate');
+      if (error) throw error;
+      if (data?.success && data.rate) {
+        setExchangeRate(parseFloat(data.rate).toFixed(4));
+        setRateTimestamp(data.timestamp);
+        setIsLiveRate(true);
+        toast.success("Taux de change mis à jour !");
+      } else {
+        throw new Error(data?.error || "Erreur inconnue");
+      }
+    } catch (err) {
+      console.error("Failed to fetch rate:", err);
+      toast.error("Impossible de récupérer le taux. Utilisation du taux par défaut.");
+    } finally {
+      setRateLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveRate();
+  }, []);
 
   const rate = parseFloat(exchangeRate) || 0;
   const commission = parseFloat(commissionRate) || 0;
@@ -39,8 +68,8 @@ const CurrencyConverter = () => {
 
   const handleReset = () => {
     setAmount("");
-    setExchangeRate("10.85");
     setCommissionRate("1.5");
+    fetchLiveRate();
   };
 
   const handleAmountChange = (value: string) => {
@@ -76,10 +105,30 @@ const CurrencyConverter = () => {
       <Card className="w-full max-w-lg shadow-xl border-border/40 rounded-2xl animate-fade-in">
         <CardContent className="p-6 sm:p-8 space-y-6">
           {/* Rate badge */}
-          <div className="flex items-center justify-center">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary px-3 py-1.5 rounded-full">
+          <div className="flex flex-col items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary px-3 py-1.5 rounded-full">
+              {isLiveRate && (
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              )}
               Taux : 1 EUR = {exchangeRate} MAD · Commission : {commissionRate} %
-            </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {rateTimestamp && (
+                <span className="text-[10px] text-muted-foreground/60">
+                  Mis à jour : {new Date(rateTimestamp).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchLiveRate}
+                disabled={rateLoading}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCw className={`w-3 h-3 mr-1 ${rateLoading ? "animate-spin" : ""}`} />
+                Actualiser
+              </Button>
+            </div>
           </div>
 
           {/* Input */}
@@ -131,11 +180,7 @@ const CurrencyConverter = () => {
                   onClick={handleCopy}
                   className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 mt-1"
                 >
-                  {copied ? (
-                    <Check className="w-4 h-4 mr-1" />
-                  ) : (
-                    <Copy className="w-4 h-4 mr-1" />
-                  )}
+                  {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
                   {copied ? "Copié" : "Copier le montant"}
                 </Button>
               </div>
@@ -181,11 +226,7 @@ const CurrencyConverter = () => {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              className="h-11 rounded-xl"
-            >
+            <Button variant="outline" onClick={handleReset} className="h-11 rounded-xl">
               <RotateCcw className="w-4 h-4 mr-2" />
               Réinitialiser
             </Button>
@@ -215,9 +256,10 @@ const CurrencyConverter = () => {
                   type="text"
                   inputMode="decimal"
                   value={exchangeRate}
-                  onChange={(e) =>
-                    setExchangeRate(e.target.value.replace(/[^0-9.]/g, ""))
-                  }
+                  onChange={(e) => {
+                    setExchangeRate(e.target.value.replace(/[^0-9.]/g, ""));
+                    setIsLiveRate(false);
+                  }}
                   className="rounded-xl"
                 />
               </div>
